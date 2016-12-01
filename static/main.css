@@ -70,8 +70,8 @@ input [type=submit] {
 
 .post-date {
 	position: absolute;
-	right: 0px;
-	bottom: 0px;
+	right: 0;
+	bottom: 0;
 	color: green;
 }
 
@@ -79,6 +79,10 @@ input [type=submit] {
 	margin-top: 5 px;
 }
 
+.post-likes {
+    font-size: 16px;
+    color: #666;
+}
 .labels {
 	text-align: right;
 	font-size: 12px;
