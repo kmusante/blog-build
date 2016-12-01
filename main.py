@@ -176,7 +176,7 @@ class PostPage(BlogHandler): #page for particular post
         likes=db.GqlQuery("select * from Like where post_id="+post_id)
 
         if not post:
-            self.error(4044)
+            self.error(404)
             return
 
         error=self.request.get('error')
@@ -255,6 +255,7 @@ class LikePost(BlogHandler):
 
             if author == current_user or current_user in post.liked_by:
                 self.redirect("/blog?error=It is bragadocious to 'like' your own post and you may only 'like' a post once.")
+                self.render("")
             else:
                 if post.likes==None:
                     post.likes = 0
@@ -264,6 +265,52 @@ class LikePost(BlogHandler):
             post.liked_by.append(current_user)
             post.put()
             self.redirect("/blog")
+
+class NewComment(BlogHandler):
+    def get(self, post_id):
+        if not self.user:
+            self.redirect("/login?error=You must be logged in to comment")
+            error=self.request.get('error')
+            self.render("login-form.html", error=error)
+            return
+        post = Post.get_by_id(int(post_id), parent=blog_key())
+        subject = post.subject
+        content = post.content
+        self.render("newcomment.html", subject=subject, content=content, pkey=post.key())
+    
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
+        # make sure user is signed in
+        if not self.user:
+            self.redirect('login')
+        # create comment
+        comment = self.request.get('comment')
+        if comment:
+            c = Comment(comment=comment, post_id=int(post_id), parent=self.user.key())
+            c.put()
+            self.redirect('/blog/%s' % str(post_id))
+        else:
+            error = "please provide a comment!"
+            self.render("permalink.html", post = post, content=content, error=error)
+
+class UpdateComment(BlogHandler):
+    def get(self, post_id, comment_id):
+        post = Post.get_by_id( int(post_id), parent=blog_key() )
+        comment = Comment.get_by_id( int(comment_id), parent=self.user.key() )
+        if comment:
+            self.render("updatecomment.html", subject=post.subject, content=post.content, comment=comment.comment)
+        else:
+            self.redirect('/commenterror')
+    def post(self, post_id, comment_id):
+        comment = Comment.get_by_id( int(comment_id), parent=self.user.key() )
+        if comment.parent().key().id() == self.user.key().id():
+            comment.comment = self.request.get('comment')
+            comment.put()
+        self.redirect( '/blog/%s' % str(post_id) )
 
 
 class Comment(db.Model):
@@ -312,7 +359,7 @@ class DeletePost(BlogHandler): #allows users to delete their own blogs
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         post.delete()
-        self.redirect('/blog')
+        self.redirect("/")
 
 
 class EditPost(BlogHandler):
@@ -347,6 +394,7 @@ class EditPost(BlogHandler):
             post.content = content
             post.put()
             self.redirect('/blog/%s' % post_id)
+            self.redirect("/")
         else:
             error = "subject and content, please!"
             self.render("editpost.html", subject=subject,
@@ -463,6 +511,8 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                (r'/blog/deletepost/(\d+)', DeletePost),
                                (r'/blog/editpost/(\d+)', EditPost),
                                (r'/blog/likepost/(\d+)', LikePost),
+                               (r'/blog/newcomment/([0-9]+)', NewComment),
+                               (r'/blog/updatecomment/([0-9]+)/([0-9]+)', UpdateComment),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
