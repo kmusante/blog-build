@@ -294,8 +294,8 @@ class NewComment(BlogHandler):
             c.put()
             self.redirect('/blog/%s' % str(post_id))
         else:
-            error = "please provide a comment!"
-            self.render("permalink.html", post = post, content=content, error=error)
+            error = "Comment Required"
+            self.render("permalink.html", post = post, error=error)
 
 class UpdateComment(BlogHandler):
     def get(self, post_id, comment_id):
@@ -314,7 +314,7 @@ class UpdateComment(BlogHandler):
 
 
 class Comment(db.Model):
-    user_id = db.IntegerProperty(required=True)
+    #user_id = db.IntegerProperty(required=True)
     post_id = db.IntegerProperty(required=True)
     comment = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
