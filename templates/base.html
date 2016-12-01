@@ -9,16 +9,18 @@
 <body>
   <a href="/blog" class="main-title">
   </a>
-
- <div class="login-area">
+ 
     {% if user %}
       {{user.name}} (<a href="/logout">logout</a>)
-    {% else %}
-      <a href="/login">login</a>
       
-      <a href="/signup">signup</a>
+    {% else %} 
+      (<a href="/login">login</a>)
+      
+      (<a href="/signup">signup</a>)
+    
     {% endif %}
-  </div>
+
+
 
   <div id="content">
   {% block content %}

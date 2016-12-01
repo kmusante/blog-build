@@ -1,18 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="static/main.css">
 
-{% extends "base.html" %}
-
-{% block content %}
+<title>Ken's Post Page Blog!</title>
+</head>
+<body>
+<div class="post">
   <div class="post-heading">
     <div class="post-title">  
-      {{p.subject}}
+      <a>{{p.subject}}</a>
+      <span class="post-likes">{{p.likes}} like(s)</span>
     </div>
+  </div>
 
     <div class="post-date">
       {{p.created.strftime("%b %d, %Y")}}
     </div>
-  </div>
 
   <div class="post-content">
     {{p._render_text | safe}}
   </div>
-{% endblock %}
+  </div>
+</body>
+
+</html>

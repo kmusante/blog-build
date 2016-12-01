@@ -8,10 +8,13 @@
   {% for p in posts %}
     {{ p.render() | safe }}
     <br><br>
+    {% for c in comments %}
 
-
-  {{p.comments.count()}} comments
-  <a href="/blog/{{p.key().id()}}/newcomment">(add new comment)</a>
+  {{c.render() | safe }} count
+  {{ c.comment }}
+  	{% endfor %}
+  <a href="/blog/newcomment/{{p.key().id()}}">(add new comment)</a>
+  	}
 
 <div align = "right">
     <a href="/blog/likepost/{{p.key().id()}}">Like</a>

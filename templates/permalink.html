@@ -3,7 +3,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+  {% if error %}
+  <div class="error">
+    {{error}}
+  </div>
+  {% endif %}
   {{ post.render() | safe }}
+  
   {% if post.comments %}
 
     
@@ -12,14 +19,13 @@
       {% for c in post.comments %}
 
        {{ c.parent().name }} says:
-          <p class="comment-content">{{ c.comment }}</p>
-          <a href="/blog/{{post.key().id()}}/updatecomment/{{c.key().id()}}">update</a>
+          <p>{{ c.comment }}</p>
+          <a href="/blog/updatecomment/{{post.key().id()}}/{{c.key().id()}}">update</a>
           <span class="separator"> | </span>
-          <a href="/blog/{{post.key().id()}}/deletecomment/{{c.key().id()}}">delete</a>
 
       {% endfor %}
 
-      <a href="/blog/{{post.key().id()}}/newcomment">add new comment</a>
+      <a href="/blog/newcomment/{{post.key().id()}}">add new comment</a>
     {% endif %}
 
 {% endblock %}
