@@ -13,7 +13,7 @@ handlers:
   static_dir: static
 
 
-- url: .*
+- url: /.*
   script: main.app
 
 libraries:

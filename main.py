@@ -258,8 +258,8 @@ class LikePost(BlogHandler):
                 self.render("")
             else:
                 if post.likes==None:
-                    post.likes = 0
-                    post.likes + 1
+                    #post.likes = 1
+                    post.likes =post.likes + 1
                 else:
                     post.likes=post.likes+1
             post.liked_by.append(current_user)
