@@ -105,20 +105,23 @@ class User(db.Model):
 
     @classmethod #call by using 'get_by_id'
     def by_id(cls, uid): #cls refers to self
-        return User.get_by_id(uid, parent = users_key())
-
+        #return User.get_by_id(uid, parent = users_key())
+        return cls.get_by_id(uid, parent=users_key())
+    
     @classmethod
     def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
+        #u = User.all().filter('name =', name).get()
+        u = cls.all().filter('name =', name).get()
         return u
 
     @classmethod #not really sure what this does but it was in lecture
     def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
-        return User(parent = users_key(),
-                    name = name,
-                    pw_hash = pw_hash,
-                    email = email)
+        return cls(parent=users_key(), name=name, pw_hash=pw_hash, email=email)
+        #return User(parent = users_key(),
+        #            name = name,
+        #            pw_hash = pw_hash,
+        #            email = email)
 
     @classmethod
     def login(cls, name, pw):
@@ -136,9 +139,16 @@ class Post(db.Model):
     #string property can be indexed but text property cannot
     created=db.DateTimeProperty(auto_now_add=True)#auto_now_add is a time stamp
     last_modified=db.DateTimeProperty(auto_now=True)#lists time last updated
+    created_by=db.TextProperty()
     user_id=db.IntegerProperty(required=True) #needed to identify user
-    likes = db.IntegerProperty(int)
+    likes = db.IntegerProperty(required=True)
     liked_by = db.ListProperty(str)
+
+    @classmethod
+    def by_post_name(cls, name):
+        # select * from User where name = name
+        u = cls.all().filter('name =', name).get()
+        return u
 
     @classmethod
     def by_name(cls, name):
@@ -165,7 +175,20 @@ class BlogFront(BlogHandler):
         self.render('front.html', posts=posts, error=error) 
         #renders result of above query in front.html stored in variable 'posts'
 
-class PostPage(BlogHandler): #page for particular post
+class PostPage(BlogHandler):
+    def get(self, post_id): #gets passed in from below but numbers now assigned randomly
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        #parent only needed because parent was created.  this section is not fully understood
+        post = db.get(key)
+        print post
+
+        if not post:
+            self.error(404)
+            return
+
+        self.render("permalink.html", post=post)
+
+'''class PostPage(BlogHandler): #page for particular post
     def get(self, post_id): #gets passed in from below but numbers now assigned randomly
         key=db.Key.from_path('Post', int(post_id), parent=blog_key())
         #parent only needed because parent was created.  this section is not fully understood
@@ -218,7 +241,7 @@ class PostPage(BlogHandler): #page for particular post
 
         likes=db.GqlQuery("select * from Like where post_id="+post_id)
 
-        self.render("permalink.html", post=post, comments=comments, noOfLikes=likes.count(), new=c)
+        self.render("permalink.html", post=post, comments=comments, noOfLikes=likes.count(), new=c)'''
 
 class NewPost(BlogHandler):
     def get(self):
@@ -234,10 +257,14 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
 
         if subject and content: #if subject and content there
-            p = Post(parent = blog_key(), subject = subject, content = content, user_id=self.user.key().id())
+            p = Post(parent = blog_key(), subject = subject, content = content, created_by=User.by_name(self.user.name).name, user_id=self.user.key().id(), likes=0, liked_by=[])
             p.put()#stores element in database
             self.redirect('/blog/%s' % str(p.key().id()))
             #redirects user to above to get id in datastore
+            pid=p.key().id()
+            print "pid= ", str(pid)
+            n1=User.by_name(self.user.name).name
+            print "Post created by", n1
 
         else:
             error = "subject and content, please!"
@@ -250,21 +277,17 @@ class LikePost(BlogHandler):
         else:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
-            author = post.user_id
+            author = post.created_by
             current_user = self.user.name
 
             if author == current_user or current_user in post.liked_by:
                 self.redirect("/blog?error=It is bragadocious to 'like' your own post and you may only 'like' a post once.")
-                self.render("")
             else:
-                if post.likes==None:
-                    #post.likes = 1
-                    post.likes =post.likes + 1
-                else:
-                    post.likes=post.likes+1
-            post.liked_by.append(current_user)
-            post.put()
-            self.redirect("/blog")
+                post.likes=post.likes+1
+                post.liked_by.append(current_user)
+                post.put()
+                self.redirect("/")
+                self.write("'Like' noted")
 
 class NewComment(BlogHandler):
     def get(self, post_id):
@@ -322,7 +345,7 @@ class Comment(db.Model):
 
     @classmethod
     def render(self):
-        self.render("comment.html")
+        self.render("newcomment.html")
 
     
     def getUserName(self):
@@ -425,8 +448,7 @@ class Signup(BlogHandler):
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
 
-        params = dict(username = self.username,
-                      email = self.email)#creates dictionary of invalid username&emails
+        params = dict(username = self.username, email = self.email)#creates dictionary of invalid username&emails
 
         if not valid_username(self.username):
             params['error_username'] = "Invalid username."
