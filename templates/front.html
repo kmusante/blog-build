@@ -2,19 +2,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{ error }}<h2>
+<h2>{{ error }}{{ likes }}<h2>
 <div class="main-title">Ken's Blog</div>
+<h5><a href = "/blog/newpost">New Post</a><h5>
 <h5><br><br><h5>
   {% for p in posts %}
     {{ p.render() | safe }}
     <br><br>
-    {% for c in comments %}
-
-  {{c.render() | safe }} count
-  {{ c.comment }}
-  	{% endfor %}
+    <span class="comment-count">{{p.comments.count()}} comments</span>
+    
   <a href="/blog/newcomment/{{p.key().id()}}">(add new comment)</a>
-  	}
+  
 
 <div align = "right">
     <a href="/blog/likepost/{{p.key().id()}}">Like</a>
