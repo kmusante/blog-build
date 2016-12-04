@@ -20,7 +20,8 @@
 
        {{ c.parent().name }} says:
           <p>{{ c.comment }}</p>
-          <span class="separator"> | </span>
+          <a href="/blog/updatecomment/{{post.key().id()}}/{{c.key().id()}}">update</a>
+          <br>
 
       {% endfor %}
 
