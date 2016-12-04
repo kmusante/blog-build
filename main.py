@@ -71,12 +71,13 @@ class MainPage(BlogHandler): #this is main page of url
         self.write("Welcome to Ken's Blog.  This was the most difficult (aka frustrating) assignment yet!<br>")
         self.write("In order to navigate my blog, input the following commands in the URL.<br><br>")
         self.write("'/signup' will take you to the initial registration page.<br>")
+        self.write("Once you have 'signed up' it will be evident how to navigate but if confused....<br><br>")
+        self.write("'/blog' will take you to the main page and you can navigate from the options.<br>")
         self.write("'/blog/newpost' will allow you to enter a new blog post.<br>")
         self.write("/'logout' will log you out of the system.<br>")
         self.write("'/login' will allow you to log back in once you have registered.<br>")
         self.write("/blog/deletepost/blogID#' will allow you to delete posts you have written.<br>")
         self.write("'/blog/editpost/blogID#' will allow you to edit your own posts.<br>")
-        self.write("/blog/likes' will allow you to like posts.<br>")
         self.write("Enjoy!")
         self.write("......ps, yes i know i could have put this in an html but I figured I had enough files for one program!")
         self.write(".....and if you only knew how many hours I put into this.....")
@@ -114,14 +115,10 @@ class User(db.Model):
         u = cls.all().filter('name =', name).get()
         return u
 
-    @classmethod #not really sure what this does but it was in lecture
+    @classmethod #makes pw hash
     def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
         return cls(parent=users_key(), name=name, pw_hash=pw_hash, email=email)
-        #return User(parent = users_key(),
-        #            name = name,
-        #            pw_hash = pw_hash,
-        #            email = email)
 
     @classmethod
     def login(cls, name, pw):
@@ -188,61 +185,6 @@ class PostPage(BlogHandler):
 
         self.render("permalink.html", post=post)
 
-'''class PostPage(BlogHandler): #page for particular post
-    def get(self, post_id): #gets passed in from below but numbers now assigned randomly
-        key=db.Key.from_path('Post', int(post_id), parent=blog_key())
-        #parent only needed because parent was created.  this section is not fully understood
-        post=db.get(key)
-
-        comments=db.GqlQuery("select * from Comment where post_id = " +post_id+" order by created desc")
-
-        likes=db.GqlQuery("select * from Like where post_id="+post_id)
-
-        if not post:
-            self.error(404)
-            return
-
-        error=self.request.get('error')
-
-        self.render("permalink.html", post=post, noOfLikes=likes.count(),
-                    comments=comments, error=error)
-        
-    def post(self, post_id):
-        key=db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post=db.get(key)
-
-        if not post:
-            self.error(404)
-            return #when posting comment, new comment is created&stored
-
-        c = ""
-        if(self.user):
-            if(self.request.get('like') and self.request.get('like')=="update"):
-                likes=db.GqlQuery("select * from Like where post_id = " +
-                                    post_id +" and user_id = "+str(self.user.key().id()))
-
-                if self.user.key().id()==post.user_id:
-                    self.redirect("/blog/"+post_id +"error=immodest to like your own post!!")
-                    return
-
-                elif likes.count()==0:
-                    l =Like(parent=blog_key(), user_id=self.user.key().id(), post_id=int(post_id))
-                    l.put()
-
-            if(self.request.get('comment')):
-                c=Comment(parent=blog_key(), user_id=self.user.key().id(), post_id=int(post_id),
-                            comment=self.request.get('comment'))
-                c.put()
-        else:
-            self.redirect("login error=You need to login before 'editing' 'liking' or 'commenting'")
-            return
-
-        comments=db.GqlQuery("select * from Comment where post_id = post_id order by created desc")
-
-        likes=db.GqlQuery("select * from Like where post_id="+post_id)
-
-        self.render("permalink.html", post=post, comments=comments, noOfLikes=likes.count(), new=c)'''
-
 class NewPost(BlogHandler):
     def get(self):
         if self.user:
@@ -273,7 +215,7 @@ class NewPost(BlogHandler):
 class LikePost(BlogHandler):
     def get(self, post_id):
         if not self.user:
-            self.redirect('/login')
+            self.redirect("/login?error=You must be logged in to 'like' post.")
         else:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
@@ -292,9 +234,7 @@ class LikePost(BlogHandler):
 class NewComment(BlogHandler):
     def get(self, post_id):
         if not self.user:
-            self.redirect("/login?error=You must be logged in to comment")
-            error=self.request.get('error')
-            self.render("login-form.html", error=error)
+            self.redirect("/login")
             return
         post = Post.get_by_id(int(post_id), parent=blog_key())
         subject = post.subject
@@ -304,16 +244,15 @@ class NewComment(BlogHandler):
     def post(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        if not post:
+        if not post: #validates post exists
             self.error(404)
             return
-        # make sure user is signed in
-        if not self.user:
-            self.redirect('login')
+        if not self.user: # make sure user is signed-in
+            self.redirect("/login")
         # create comment
         comment = self.request.get('comment')
         if comment:
-            c = Comment(comment=comment, post_id=int(post_id), parent=self.user.key())
+            c = Comment(comment=comment, post=post_id, parent=self.user.key())
             c.put()
             self.redirect('/blog/%s' % str(post_id))
         else:
@@ -322,23 +261,21 @@ class NewComment(BlogHandler):
 
 class UpdateComment(BlogHandler):
     def get(self, post_id, comment_id):
-        post = Post.get_by_id( int(post_id), parent=blog_key() )
-        comment = Comment.get_by_id( int(comment_id), parent=self.user.key() )
+        post = Post.get_by_id(int(post_id), parent=blog_key())
+        comment = Comment.get_by_id(int(comment_id), parent=self.user.key())
         if comment:
             self.render("updatecomment.html", subject=post.subject, content=post.content, comment=comment.comment)
         else:
-            self.redirect('/commenterror')
+            self.redirect("/blog?error=You may only edit your own post.")
     def post(self, post_id, comment_id):
-        comment = Comment.get_by_id( int(comment_id), parent=self.user.key() )
+        comment = Comment.get_by_id(int(comment_id), parent=self.user.key())
         if comment.parent().key().id() == self.user.key().id():
             comment.comment = self.request.get('comment')
             comment.put()
-        self.redirect( '/blog/%s' % str(post_id) )
-
+        self.redirect('/blog/%s' % str(post_id))
 
 class Comment(db.Model):
-    #user_id = db.IntegerProperty(required=True)
-    post_id = db.IntegerProperty(required=True)
+    post = db.StringProperty(required=True)
     comment = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
@@ -382,7 +319,7 @@ class DeletePost(BlogHandler): #allows users to delete their own blogs
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         post.delete()
-        self.redirect("/")
+        self.redirect("/blog/newpost")
 
 
 class EditPost(BlogHandler):
@@ -400,8 +337,8 @@ class EditPost(BlogHandler):
                 else:
                     self.redirect('/blog?error='+post_id+' is not a current valid blog id')
         else:
-            self.redirect("/login?error=You need to be logged, " +
-                          "in order to edit your post!!")
+            self.redirect("/login?error=You need to be logged " +
+                          "in order to edit posts!!")
 
     def post(self, post_id):
         if not self.user:
