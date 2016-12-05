@@ -3,6 +3,8 @@ Build A Blog
 
 See demo at http://engineapp-151521.appspot.com/ and follow instructions for using blog
 
+This program is a blog.  Users can create a log in and then post blogs.  They may edit and delete their own blogs.  Other users may also comment and like a blog.  This was an assignment for Udacity's Fullstack Nano Degree Program.
+
 To Run:
 
 -Clone from: https://github.com/kmusante/blog-build
