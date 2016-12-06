@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>new comment</h2>
-    <form method="post" class="comment">
+  <h2>Delete Comment</h2>
+
+    <form method="post">
       <label>
-        <div>New Comment for <a href="/blog/{{pkey.id()}}">{{subject}}</a></div>
+        <div>Delete comment on {{subject}}</div>
         <p>{{content}}</p>
         <textarea name="comment">{{comment}}</textarea>
       </label>
 
       <div class="error">{{error}}</div>
-
+      <p>Are you sure you wish to Delete this comment?</p>
       <input type="submit">
     </form>
     <p>Back to blog? <a href="/blog">Click here to return to Blog</a></p>
+    
 {% endblock %}

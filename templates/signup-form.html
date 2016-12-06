@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
+{% block content %}
   <head>
     <title>Sign Up</title>
     <style type="text/css">
@@ -11,7 +11,7 @@
   </head>
 
   <body>
-    <h2>Signup</h2>
+    <h2>Signup for Ken's Blog</h2>
     <form method="post">
       <table>
         <tr>
@@ -65,6 +65,7 @@
 
       <input type="submit">
     </form>
+    <p>Already a user?<a href="/login">Login here</a></p>
   </body>
 
-</html>
+{% endblock %}

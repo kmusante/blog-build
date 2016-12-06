@@ -21,11 +21,15 @@
        {{ c.parent().name }} says:
           <p>{{ c.comment }}</p>
           <a href="/blog/updatecomment/{{post.key().id()}}/{{c.key().id()}}">update</a>
+          OR
+          <a href="/blog/deletecomment/{{post.key().id()}}/{{c.key().id()}}">delete</a>
           <br>
 
       {% endfor %}
 
       <a href="/blog/newcomment/{{post.key().id()}}">add new comment</a>
     {% endif %}
+    <br>
+    <p>Wish to return to the Blog's Home Page?<a href="/blog"> Back to blog</a></p>
 
 {% endblock %}

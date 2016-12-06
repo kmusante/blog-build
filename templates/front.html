@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{ error }}{{ likes }}<h2>
+<h2>{{ error }}<h2>
 <div class="main-title">Ken's Blog</div>
 <h5><a href = "/blog/newpost">New Post</a><h5>
 <h5><br><br><h5>
@@ -19,6 +19,7 @@
 	<a href="/blog/editpost/{{p.key().id()}}">Edit</a>
 	<a href="/blog/deletepost/{{p.key().id()}}">Delete</a>
 </div>
+<br>
 <br>
   {% endfor %}
 {% endblock %}
